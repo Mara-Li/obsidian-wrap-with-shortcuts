@@ -47,6 +47,9 @@ importers:
       obsidian:
         specifier: ^1.14.4
         version: 1.14.4(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)
+      obsidian-typings:
+        specifier: npm:@obsidian-typings/obsidian-public-1.14.4@^1.15.0
+        version: '@obsidian-typings/obsidian-public-1.14.4@1.15.0(@types/node@26.6.6)'
       tslib:
         specifier: ^2.9.1
         version: 2.9.1
@@ -405,6 +408,11 @@ packages:
 
   '@nodable/entities@3.1.0':
     resolution: {integrity: sha512-LsS/DjHr+uDM647Gru/cA8+J3a3HfhttwCKLyuoyN7yXTFCxKBtSgMQBvrW9yNPa2/zDRUNuGPaH5QUFoa4arQ==}
+
+  '@obsidian-typings/obsidian-public-1.14.4@1.15.0':
+    resolution: {integrity: sha512-icK89T5th/KT6kp74bjtbD/7KGJHNvlk8w3O2qLed9qopVt5lnnJlHnfEUBqq2LQ20CFjxNX1LStm3ZsxyS0lg==}
+    peerDependencies:
+      '@types/node': '>=16.0.0'
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
@@ -1905,6 +1913,10 @@ snapshots:
       eslint-plugin-security: 1.4.0
 
   '@nodable/entities@3.1.0': {}
+
+  '@obsidian-typings/obsidian-public-1.14.4@1.15.0(@types/node@26.6.6)':
+    dependencies:
+      '@types/node': 26.6.6
 
   '@rtsao/scc@1.1.0': {}
 
