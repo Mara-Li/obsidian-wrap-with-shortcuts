@@ -78,6 +78,7 @@ export default class SettingsTab extends PluginSettingTab {
 		];
 	}
 
+	// `id` (Obsidian 1.14) keeps the open page stable when it is renamed
 	private wrapperPage(wrapper: WrapperTag): SettingDefinitionPage {
 		return {
 			type: "page",
@@ -86,7 +87,6 @@ export default class SettingsTab extends PluginSettingTab {
 			desc: `${wrapper.startTag}{selection}${wrapper.endTag}`,
 			items: [
 				{
-					id: `${wrapper.id}.name`,
 					name: "Name",
 					desc: "Used for the command name.",
 					searchable: false,
@@ -97,19 +97,17 @@ export default class SettingsTab extends PluginSettingTab {
 					},
 				},
 				{
-					id: `${wrapper.id}.startTag`,
 					name: "Start tag",
 					searchable: false,
 					control: { type: "textarea", key: `${wrapper.id}.startTag`, rows: 2 },
 				},
 				{
-					id: `${wrapper.id}.endTag`,
 					name: "End tag",
 					searchable: false,
 					control: { type: "textarea", key: `${wrapper.id}.endTag`, rows: 2 },
 				},
 			],
-		};
+		} as SettingDefinitionPage;
 	}
 
 	private async addWrapper(): Promise<void> {
