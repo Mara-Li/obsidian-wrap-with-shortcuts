@@ -1,112 +1,105 @@
-import { Command, Editor, EditorPosition, Plugin } from "obsidian";
-import SettingsTab from './SettingsTab'
+import { type Editor, Plugin } from "obsidian";
+import SettingsTab from "./SettingsTab";
 
 export interface WrapperTag {
-  id?: string; // 20220904: compitable with older version, mark as optional
-  name: string;
-  startTag: string;
-  endTag: string;
+	id: string;
+	name: string;
+	startTag: string;
+	endTag: string;
 }
 
 interface WrapperTagSettings {
-  wrapperTags: WrapperTag[];
+	wrapperTags: WrapperTag[];
 }
 
 const DEFAULT_SETTINGS: WrapperTagSettings = {
-  wrapperTags: [
-    {
-      id: 'underline',
-      name: 'Underline',
-      startTag: '<u>',
-      endTag: '</u>'
-    },
-  ]
-}
+	wrapperTags: [
+		{
+			id: "underline",
+			name: "Underline",
+			startTag: "<u>",
+			endTag: "</u>",
+		},
+	],
+};
 
 export default class WrapWithShortcut extends Plugin {
-  settings: WrapperTagSettings;
+	settings!: WrapperTagSettings;
 
-  async onload() {
-    await this.loadSettings();
-    if (this.settings.wrapperTags.length > 0 && !this.settings.wrapperTags[0].id) {
-      await this.applyWrapperTagID();
-    }
+	async onload(): Promise<void> {
+		await this.loadSettings();
+		this.settings.wrapperTags.forEach((wrapperTag) => this.registerWrapperCommand(wrapperTag));
+		this.addSettingTab(new SettingsTab(this));
+	}
 
-    this.settings.wrapperTags.forEach((wrapperTag, index) => {
-      this.getCommand(wrapperTag, index)
-    })
-    this.addSettingTab(new SettingsTab(this));
-  }
+	private commandId(wrapperTag: WrapperTag): string {
+		return `wrap-with-shortcut-${wrapperTag.id}`;
+	}
 
-  getCommand(wrapperTag: WrapperTag, index: number) {
-    const command: Command = {
-      id: `wrap-with-shortcut-${wrapperTag.id}`,
-      name: `Toggle ${wrapperTag.name}`,
-      editorCallback: (editor: Editor) => this.wrapSelectedTextIn(editor, wrapperTag.startTag, wrapperTag.endTag),
-    };
-    this.addCommand(command);
-  }
+	registerWrapperCommand(wrapperTag: WrapperTag): void {
+		this.addCommand({
+			id: this.commandId(wrapperTag),
+			name: `Toggle ${wrapperTag.name}`,
+			editorCallback: (editor: Editor) => this.wrapSelectedTextIn(editor, wrapperTag.startTag, wrapperTag.endTag),
+		});
+	}
 
-  wrapSelectedTextIn(editor: Editor, startTag = '<u>', endTag = '</u>'): void {
-    if (startTag === '' && endTag === '') {
-      return;
-    }
+	unregisterWrapperCommand(wrapperTag: WrapperTag): void {
+		this.removeCommand(this.commandId(wrapperTag));
+	}
 
-    const selectedText = editor.getSelection();
+	wrapSelectedTextIn(editor: Editor, startTag: string, endTag: string): void {
+		if (startTag === "" && endTag === "") return;
 
-    function toPos(editor: Editor, pos: number): EditorPosition {
-      return editor.offsetToPos(pos);
-    }
+		const selectedText = editor.getSelection();
+		const toPos = (offset: number) => editor.offsetToPos(offset);
+		const getRange = (from: number, to: number): string => {
+			try {
+				return editor.getRange(toPos(from), toPos(to));
+			} catch {
+				return "";
+			}
+		};
 
-    function getRange(editor: Editor, from: number, to: number): string {
-      try {
-        return editor.getRange(toPos(editor, from), toPos(editor, to));
-      } catch (_) {
-        return '';
-      }
-    }
+		const fos = editor.posToOffset(editor.getCursor("from"));
+		const tos = editor.posToOffset(editor.getCursor("to"));
+		const len = selectedText.length;
 
-    /* Detect whether the selected text is packed by <u></u>.
-       If true, unpack it, else pack with <u></u>. */
+		const beforeText = getRange(fos - startTag.length, tos - len);
+		const afterText = getRange(fos + len, tos + endTag.length);
+		const startText = getRange(fos, fos + startTag.length);
+		const endText = getRange(tos - endTag.length, tos);
 
-    const fos = editor.posToOffset(editor.getCursor("from")); // from offset
-    const tos = editor.posToOffset(editor.getCursor("to")); // to offset
-    const len = selectedText.length;
+		if (beforeText === startTag && afterText === endTag) {
+			// Unwrap: tags are around the selection
+			editor.setSelection(toPos(fos - startTag.length), toPos(tos + endTag.length));
+			editor.replaceSelection(selectedText);
+			editor.setSelection(toPos(fos - startTag.length), toPos(tos - startTag.length));
+		} else if (startText === startTag && endText === endTag) {
+			// Unwrap: tags are inside the selection
+			editor.replaceSelection(getRange(fos + startTag.length, tos - endTag.length));
+			editor.setSelection(toPos(fos), toPos(tos - (startTag.length + endTag.length)));
+		} else {
+			editor.replaceSelection(`${startTag}${selectedText}${endTag}`);
+			editor.setSelection(toPos(fos + startTag.length), toPos(tos + startTag.length));
+		}
+	}
 
-    const beforeText = getRange(editor, fos - startTag.length, tos - len);
-    const afterText = getRange(editor, fos + len, tos + endTag.length);
-    const startText = getRange(editor, fos, fos + startTag.length);
-    const endText = getRange(editor, tos - endTag.length, tos);
+	async loadSettings(): Promise<void> {
+		const data = (await this.loadData()) as Partial<WrapperTagSettings> | null;
+		this.settings = Object.assign({}, structuredClone(DEFAULT_SETTINGS), data);
+		// Older versions stored wrappers without an id
+		let migrated = false;
+		this.settings.wrapperTags.forEach((wrapperTag, index) => {
+			if (!wrapperTag.id) {
+				wrapperTag.id = `${index}`;
+				migrated = true;
+			}
+		});
+		if (migrated) await this.saveSettings();
+	}
 
-    if (beforeText === startTag && afterText === endTag) {
-      //=> undo (inside selection)
-      editor.setSelection(toPos(editor, fos - startTag.length), toPos(editor, tos + endTag.length));
-      editor.replaceSelection(selectedText);
-      // re-select
-      editor.setSelection(toPos(editor, fos - startTag.length), toPos(editor, tos - startTag.length));
-    } else if (startText === startTag && endText === endTag) {
-      //=> undo (outside selection)
-      editor.replaceSelection(editor.getRange(toPos(editor, fos + startTag.length), toPos(editor, tos - endTag.length)));
-      // re-select
-      editor.setSelection(toPos(editor, fos), toPos(editor, tos - (startTag.length + endTag.length)));
-    } else {
-      editor.replaceSelection(`${startTag}${selectedText}${endTag}`);
-      editor.setSelection(toPos(editor, fos + startTag.length), toPos(editor, tos + startTag.length));
-    }
-  }
-
-  async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-  }
-
-  async saveSettings() {
-    await this.saveData(this.settings);
-  }
-
-  async applyWrapperTagID() {
-    this.settings.wrapperTags.forEach((wrapperTag, index) => {
-      wrapperTag.id ||= `${index}`;
-    });
-    await this.saveSettings();
-  }
+	async saveSettings(): Promise<void> {
+		await this.saveData(this.settings);
+	}
 }

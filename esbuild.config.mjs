@@ -1,7 +1,7 @@
 import esbuild from "esbuild";
-import process from "process";
-import builtins from 'builtin-modules'
-import path from 'path';
+import process from "node:process";
+import path from "node:path";
+import { builtinModules } from "node:module";
 
 const banner =
 `/*
@@ -10,24 +10,31 @@ if you want to view the source, please visit the github repository of this plugi
 */
 `;
 
-const prod = (process.argv[2] === 'production');
+const prod = process.argv[2] === "production";
+const outputDir = process.argv[3] === "--output-dir" && process.argv[4] ? process.argv[4] : ".";
 
-let output = (process.argv.length > 3 && process.argv[3] === '--output-dir') ? process.argv[4] : '.';
-output = path.join(output, 'main.js');
-
-
-esbuild.build({
-	banner: {
-		js: banner,
-	},
-	entryPoints: ['src/main.ts'],
+const context = await esbuild.context({
+	banner: { js: banner },
+	entryPoints: ["src/main.ts"],
 	bundle: true,
-	external: ['obsidian', 'electron', ...builtins],
-	format: 'cjs',
-	watch: !prod,
-	target: 'es2016',
+	external: [
+		"obsidian",
+		"electron",
+		"@codemirror/*",
+		"@lezer/*",
+		...builtinModules,
+	],
+	format: "cjs",
+	target: "es2018",
 	logLevel: "info",
-	sourcemap: prod ? false : 'inline',
+	sourcemap: prod ? false : "inline",
 	treeShaking: true,
-	outfile: output,
-}).catch(() => process.exit(1));
+	outfile: path.join(outputDir, "main.js"),
+});
+
+if (prod) {
+	await context.rebuild();
+	await context.dispose();
+} else {
+	await context.watch();
+}

@@ -1,74 +1,76 @@
-import { Modal, Setting } from "obsidian";
-
-import WrapWithShortcut, { WrapperTag } from "./main";
+import { type App, ButtonComponent, displayTooltip, Modal, Setting, TextComponent } from "obsidian";
+import type { WrapperTag } from "./main";
 
 export default class WrapperCreatorModal extends Modal {
-	plugin: WrapWithShortcut;
-	wrapper: WrapperTag;
-	editMode: boolean;
-	onSubmit: (wrapper: WrapperTag) => void;
+	private wrapper: WrapperTag;
+	private nameInput!: TextComponent;
 
-	constructor(plugin: WrapWithShortcut, onSubmit: (wrapper: WrapperTag) => void, wrapper?: WrapperTag) {
-		super(plugin.app);
-		if (wrapper) {
-			this.wrapper = wrapper;
-			this.editMode = true;
-		} else {
-			this.wrapper = { id: `w${new Date().getTime()}`, name: '', startTag: '', endTag: '' };
-			this.editMode = false;
-		}
-		this.onSubmit = onSubmit;
+	constructor(app: App, private onSubmit: (wrapper: WrapperTag) => void | Promise<void>, wrapper?: WrapperTag) {
+		super(app);
+		// Work on a copy so cancelling leaves the original untouched
+		this.wrapper = wrapper
+			? { ...wrapper }
+			: { id: `w${Date.now()}`, name: "", startTag: "", endTag: "" };
+		this.modalEl.addClass("mod-lg");
+		this.setTitle(wrapper ? "Edit wrapper" : "Add wrapper");
 	}
 
-	onOpen() {
-		super.onOpen();
-		this.display();
-	}
-
-	display() {
+	onOpen(): void {
 		const { contentEl: el } = this;
 		el.empty();
-		this.titleEl.setText(this.editMode ? "Edit wrapper" : "Add a new wrapper")
 
 		new Setting(el)
-			.setName('Name')
-			.setDesc("Specify the Name of your wrapper.")
+			.setName("Name")
+			.setDesc("Used for the command name.")
 			.addText((cb) => {
-				cb.setValue(this.wrapper.name ?? "")
-					.onChange(value => {
-						this.wrapper.name = value.trim();
-					})
-			})
+				this.nameInput = cb;
+				cb.setValue(this.wrapper.name).onChange((value) => {
+					this.wrapper.name = value.trim();
+				});
+			});
 
 		new Setting(el)
-			.setName('Start Tag')
-			.setDesc("Specify the start tag")
+			.setName("Start tag")
 			.addTextArea((cb) => {
-				cb.setValue(this.wrapper.startTag ?? "")
-					.onChange(value => {
-						this.wrapper.startTag = value;
-					})
-			})
+				cb.setValue(this.wrapper.startTag).onChange((value) => {
+					this.wrapper.startTag = value;
+				});
+			});
 
 		new Setting(el)
-			.setName('End Tag')
-			.setDesc("Specify the end tag")
+			.setName("End tag")
 			.addTextArea((cb) => {
-				cb.setValue(this.wrapper.endTag ?? "")
-					.onChange(value => {
-						this.wrapper.endTag = value;
-					})
-			})
+				cb.setValue(this.wrapper.endTag).onChange((value) => {
+					this.wrapper.endTag = value;
+				});
+			});
 
-		new Setting(el).addButton((btn) =>
-		btn
-			.setButtonText("Submit")
+		const buttonsEl = el.createDiv({ cls: "modal-button-container" });
+		new ButtonComponent(buttonsEl)
+			.setButtonText("Save")
 			.setCta()
-			.onClick(() => {
-				this.onSubmit(this.wrapper);
-				this.close();
-			})
-		);
+			.onClick(() => void this.submit());
+		new ButtonComponent(buttonsEl)
+			.setButtonText("Cancel")
+			.onClick(() => this.close());
 
+		this.nameInput.inputEl.focus();
+	}
+
+	onClose(): void {
+		this.contentEl.empty();
+	}
+
+	private async submit(): Promise<void> {
+		if (!this.wrapper.name) {
+			displayTooltip(this.nameInput.inputEl, "Required", { classes: ["mod-error"] });
+			return;
+		}
+		if (!this.wrapper.startTag && !this.wrapper.endTag) {
+			displayTooltip(this.nameInput.inputEl, "At least one tag is required", { classes: ["mod-error"] });
+			return;
+		}
+		await this.onSubmit(this.wrapper);
+		this.close();
 	}
 }
