@@ -13,4 +13,4 @@ declare module "obsidian" {
 		id?: string;
 	}
 }
-/* eslint-enable @typescript-eslint/no-unused-vars */
+/* eslint-enable @typescript-eslint/no-unused-vars -- end of augmentation */
