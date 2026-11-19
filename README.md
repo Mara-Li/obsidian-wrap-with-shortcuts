@@ -8,7 +8,7 @@
 
 Wrap the selected text in customized tags with shortcuts.
 
-Requires Obsidian 1.13.0 or later.
+Requires Obsidian 1.14.0 or later.
 
 **Underline** is provided with `Ctrl-u`(`Cmd-u`) as default wrappers.
 

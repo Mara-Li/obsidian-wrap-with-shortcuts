@@ -2,7 +2,7 @@
   "id": "obsidian-wrap-with-shortcuts",
   "name": "Wrap with shortcuts",
   "version": "1.5.0",
-  "minAppVersion": "1.13.0",
+  "minAppVersion": "1.14.0",
   "description": "Wrap selected text in custom tags with shortcuts, e.g. underline, sub, ruby (フリガナ).",
   "isDesktopOnly": false,
   "author": "Manic Chuang",

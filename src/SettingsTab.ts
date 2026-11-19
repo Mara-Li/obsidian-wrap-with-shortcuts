@@ -41,11 +41,7 @@ export default class SettingsTab extends PluginSettingTab {
 		// Command name is fixed at registration, tags are read on each call
 		if (field === "name") this.plugin.registerWrapperCommand(wrapper);
 		await this.plugin.saveSettings();
-	}
-
-	// Refresh page titles after a rename once the tab is left
-	hide(): void {
-		super.hide();
+		// Ids keep the open page stable while its name and preview refresh
 		this.update();
 	}
 
@@ -85,25 +81,29 @@ export default class SettingsTab extends PluginSettingTab {
 	private wrapperPage(wrapper: WrapperTag): SettingDefinitionPage {
 		return {
 			type: "page",
+			id: wrapper.id,
 			name: wrapper.name,
 			desc: `${wrapper.startTag}{selection}${wrapper.endTag}`,
 			items: [
 				{
+					id: `${wrapper.id}.name`,
 					name: "Name",
 					desc: "Used for the command name.",
 					searchable: false,
 					control: {
 						type: "text",
 						key: `${wrapper.id}.name`,
-						validate: (value) => this.validateName(wrapper, value),
+						validate: (value) => (value.trim() ? undefined : "Name is required."),
 					},
 				},
 				{
+					id: `${wrapper.id}.startTag`,
 					name: "Start tag",
 					searchable: false,
 					control: { type: "textarea", key: `${wrapper.id}.startTag`, rows: 2 },
 				},
 				{
+					id: `${wrapper.id}.endTag`,
 					name: "End tag",
 					searchable: false,
 					control: { type: "textarea", key: `${wrapper.id}.endTag`, rows: 2 },
@@ -112,20 +112,13 @@ export default class SettingsTab extends PluginSettingTab {
 		};
 	}
 
-	// Page names must be unique for navigation
-	private validateName(wrapper: WrapperTag, value: string): string | undefined {
-		const name = value.trim().toLowerCase();
-		if (!name) return "Name is required.";
-		if (this.wrappers.some((w) => w !== wrapper && w.name.toLowerCase() === name))
-			return "Another wrapper already uses this name.";
-	}
-
 	private async addWrapper(): Promise<void> {
-		const names = new Set(this.wrappers.map((w) => w.name.toLowerCase()));
-		let name = "New wrapper";
-		for (let i = 2; names.has(name.toLowerCase()); i++) name = `New wrapper ${i}`;
-
-		const wrapper: WrapperTag = { id: `w${Date.now()}`, name, startTag: "", endTag: "" };
+		const wrapper: WrapperTag = {
+			id: `w${Date.now()}`,
+			name: "New wrapper",
+			startTag: "",
+			endTag: "",
+		};
 		this.wrappers.push(wrapper);
 		this.plugin.registerWrapperCommand(wrapper);
 		await this.plugin.saveSettings();
