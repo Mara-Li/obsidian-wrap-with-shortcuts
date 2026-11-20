@@ -14,6 +14,7 @@ export default class WrapWithSettingsTab extends PluginSettingTab {
 	constructor(plugin: WrapWithShortcut) {
 		super(plugin.app, plugin);
 		this.plugin = plugin;
+		this.containerEl.addClass(this.plugin.manifest.id);
 	}
 
 	private get wrappers(): WrapperTag[] {
@@ -67,12 +68,9 @@ export default class WrapWithSettingsTab extends PluginSettingTab {
 					this.wrappers.splice(newIndex, 0, moved);
 					void this.plugin.saveSettings();
 				},
-				onDelete: (index) => {
-					const [removed] = this.wrappers.splice(index, 1);
-					this.plugin.unregisterWrapperCommand(removed);
-					void this.plugin.saveSettings();
-					this.update();
-				},
+				// Page items get no delete/drag buttons from Obsidian, only the
+				// Delete/Backspace and Alt+↑/↓ shortcuts on the focused row
+				onDelete: (index) => void this.deleteWrapper(this.wrappers[index]),
 				items: this.wrappers.map((wrapper) => this.wrapperPage(wrapper)),
 			},
 		];
@@ -87,27 +85,62 @@ export default class WrapWithSettingsTab extends PluginSettingTab {
 			desc: `${wrapper.startTag}{selection}${wrapper.endTag}`,
 			items: [
 				{
-					name: "Name",
-					desc: "Used for the command name.",
-					searchable: false,
-					control: {
-						type: "text",
-						key: `${wrapper.id}.name`,
-						validate: (value) => (value.trim() ? undefined : "Name is required."),
-					},
+					// Only groups accept `cls`; it is the hook for the page's CSS
+					type: "group",
+					cls: `${this.plugin.manifest.id} wrapper-page`,
+					items: [
+						{
+							name: "Name",
+							desc: "Used for the command name.",
+							searchable: false,
+							control: {
+								type: "text",
+								key: `${wrapper.id}.name`,
+								validate: (value) => (value.trim() ? undefined : "Name is required."),
+							},
+						},
+						{
+							name: "Start tag",
+							searchable: false,
+							control: { type: "textarea", key: `${wrapper.id}.startTag`, rows: 3 },
+						},
+						{
+							name: "End tag",
+							searchable: false,
+							control: { type: "textarea", key: `${wrapper.id}.endTag`, rows: 3 },
+						},
+					],
 				},
 				{
-					name: "Start tag",
-					searchable: false,
-					control: { type: "textarea", key: `${wrapper.id}.startTag`, rows: 2 },
-				},
-				{
-					name: "End tag",
-					searchable: false,
-					control: { type: "textarea", key: `${wrapper.id}.endTag`, rows: 2 },
+					type: "group",
+					items: [
+						{
+							name: "Delete wrapper",
+							desc: "Also removes its command.",
+							searchable: false,
+							render: (setting) => {
+								setting.addButton((button) =>
+									button
+										.setButtonText("Delete")
+										.setDestructive()
+										.onClick(() => void this.deleteWrapper(wrapper, true)),
+								);
+							},
+						},
+					],
 				},
 			],
 		} as SettingDefinitionPage;
+	}
+
+	private async deleteWrapper(wrapper: WrapperTag | undefined, closePage = false): Promise<void> {
+		if (!wrapper) return;
+		this.wrappers.remove(wrapper);
+		this.plugin.unregisterWrapperCommand(wrapper);
+		await this.plugin.saveSettings();
+		this.update();
+		// Internal API: go back to the list once the open page is gone
+		if (closePage) (this as unknown as { setting: { closePage(): void } }).setting.closePage();
 	}
 
 	private async addWrapper(): Promise<void> {

@@ -1,0 +1,18 @@
+/* Wrapper sub-page: stack tag textareas under their label, full width */
+.wrap-with-shortcuts.wrapper-page .setting-item:has(textarea) {
+	flex-direction: column;
+	align-items: stretch;
+	gap: var(--size-4-2);
+}
+
+.wrap-with-shortcuts.wrapper-page .setting-item:has(textarea) .setting-item-control {
+	width: 100%;
+}
+
+.wrap-with-shortcuts.wrapper-page textarea {
+	width: 100%;
+	min-height: 4em;
+	resize: vertical;
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-small);
+}

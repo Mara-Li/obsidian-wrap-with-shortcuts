@@ -9,10 +9,12 @@ const LEGACY_PLUGIN_ID = "obsidian-wrap-with-shortcuts";
 
 export default class WrapWithShortcut extends Plugin {
 	settings!: WrapWithSettings;
+	private wrapSettingTab!: WrapWithSettingsTab;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
-		this.addSettingTab(new WrapWithSettingsTab(this));
+		this.wrapSettingTab = new WrapWithSettingsTab(this);
+		this.addSettingTab(this.wrapSettingTab);
 		for (const wrapper of this.settings.wrapperTags) this.registerWrapperCommand(wrapper);
 		if (!this.settings.migrated) {
 			this.app.workspace.onLayoutReady(() => this.firstLoad());
@@ -43,6 +45,8 @@ export default class WrapWithShortcut extends Plugin {
 			this.settings.wrapperTags.push(wrapper);
 			this.registerWrapperCommand(wrapper);
 		});
+		// The settings tab caches its definitions; refresh them with the imported wrappers
+		this.wrapSettingTab.update();
 	}
 
 	private async markMigrated(): Promise<void> {
