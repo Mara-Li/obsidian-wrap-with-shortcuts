@@ -113,15 +113,17 @@ export default class WrapWithSettingsTab extends PluginSettingTab {
 				},
 				{
 					type: "group",
+					cls: `${this.plugin.manifest.id} wrapper-delete`,
 					items: [
 						{
-							name: "Delete wrapper",
-							desc: "Also removes its command.",
+							// `name` is required by the API; the label is hidden in CSS
+							name: "",
 							searchable: false,
 							render: (setting) => {
 								setting.addButton((button) =>
 									button
-										.setButtonText("Delete")
+										.setButtonText("Delete wrapper")
+										.setTooltip("Also removes its command.")
 										.setDestructive()
 										.onClick(() => void this.deleteWrapper(wrapper, true)),
 								);

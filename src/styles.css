@@ -16,3 +16,16 @@
 	font-family: var(--font-monospace);
 	font-size: var(--font-ui-small);
 }
+
+/* Delete button alone on its row, full width */
+.wrap-with-shortcuts.wrapper-delete .setting-item-info {
+	display: none;
+}
+
+.wrap-with-shortcuts.wrapper-delete .setting-item-control {
+	flex: 1 1 auto;
+}
+
+.wrap-with-shortcuts.wrapper-delete .setting-item-control button {
+	width: 100%;
+}
