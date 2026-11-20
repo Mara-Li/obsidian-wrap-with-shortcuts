@@ -1,14 +1,14 @@
 import {
-	PluginSettingTab,
-	type SettingDefinitionItem,
-	type SettingDefinitionPage,
+    PluginSettingTab,
+    type SettingDefinitionItem,
+    type SettingDefinitionPage,
 } from "obsidian";
 import type WrapWithShortcut from "./main";
-import type { WrapperField, WrapperTag } from "./settings";
+import type { WrapperField, WrapperTag } from "./interface";
 
 const FIELDS: readonly WrapperField[] = ["name", "startTag", "endTag"];
 
-export default class SettingsTab extends PluginSettingTab {
+export default class WrapWithSettingsTab extends PluginSettingTab {
 	plugin: WrapWithShortcut;
 
 	constructor(plugin: WrapWithShortcut) {

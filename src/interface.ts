@@ -7,11 +7,13 @@ export interface WrapperTag {
 
 export type WrapperField = Exclude<keyof WrapperTag, "id">;
 
-export interface WrapperTagSettings {
+export interface WrapWithSettings {
+	migrated?: boolean;
 	wrapperTags: WrapperTag[];
 }
 
-export const DEFAULT_SETTINGS: WrapperTagSettings = {
+export const DEFAULT_SETTINGS: WrapWithSettings = {
+	migrated: false,
 	wrapperTags: [
 		{
 			id: "underline",
