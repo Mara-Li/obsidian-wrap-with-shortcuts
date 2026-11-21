@@ -1,10 +1,10 @@
 import {
-    PluginSettingTab,
-    type SettingDefinitionItem,
-    type SettingDefinitionPage,
+	PluginSettingTab,
+	type SettingDefinitionItem,
+	type SettingDefinitionPage,
 } from "obsidian";
-import type WrapWithShortcut from "./main";
 import type { WrapperField, WrapperTag } from "./interface";
+import type WrapWithShortcut from "./main";
 
 const FIELDS: readonly WrapperField[] = ["name", "startTag", "endTag"];
 
@@ -125,24 +125,28 @@ export default class WrapWithSettingsTab extends PluginSettingTab {
 										.setButtonText("Delete wrapper")
 										.setTooltip("Also removes its command.")
 										.setDestructive()
-										.onClick(() => void this.deleteWrapper(wrapper, true)),
+										.onClick(() => void this.deleteWrapper(wrapper, true))
 								);
 							},
 						},
 					],
 				},
 			],
-		} as SettingDefinitionPage;
+		};
 	}
 
-	private async deleteWrapper(wrapper: WrapperTag | undefined, closePage = false): Promise<void> {
+	private async deleteWrapper(
+		wrapper: WrapperTag | undefined,
+		closePage = false
+	): Promise<void> {
 		if (!wrapper) return;
 		this.wrappers.remove(wrapper);
 		this.plugin.unregisterWrapperCommand(wrapper);
 		await this.plugin.saveSettings();
 		this.update();
 		// Internal API: go back to the list once the open page is gone
-		if (closePage) (this as unknown as { setting: { closePage(): void } }).setting.closePage();
+		if (closePage)
+			(this as unknown as { setting: { closePage(): void } }).setting.closePage();
 	}
 
 	private async addWrapper(): Promise<void> {

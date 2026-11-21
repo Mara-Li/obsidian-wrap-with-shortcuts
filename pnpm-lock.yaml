@@ -15,8 +15,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.15.0(jiti@2.7.0)(supports-color@7.2.0))
       '@obsidian-typings/obsidian-public-latest':
-        specifier: ^6.61.0
-        version: 6.61.0(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)(@types/node@26.6.6)
+        specifier: ^6.63.0
+        version: 6.63.0(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)(@types/node@26.6.6)
       '@types/node':
         specifier: ^26.6.6
         version: 26.6.6
@@ -409,15 +409,15 @@ packages:
   '@nodable/entities@3.1.0':
     resolution: {integrity: sha512-LsS/DjHr+uDM647Gru/cA8+J3a3HfhttwCKLyuoyN7yXTFCxKBtSgMQBvrW9yNPa2/zDRUNuGPaH5QUFoa4arQ==}
 
-  '@obsidian-typings/obsidian-public-1.15.1@1.2.0':
-    resolution: {integrity: sha512-nxiPwB9YcwTdFKQpEoak6SBxND6N/TwvXHqkcqD7w+JY8K9tzDaYRcykuix5bq1N+EPnODva76NhJH0Iw422zg==}
+  '@obsidian-typings/obsidian-public-1.15.1@1.4.0':
+    resolution: {integrity: sha512-8VW9DW4H87jGZrwqFzRQfjy+wUJXyJo9ChH5ubPS9fYS+1uxroGPyNkHp65yCI3p+yxeEZQIi4PZI0UpY57z6g==}
     peerDependencies:
       '@codemirror/state': ^6.7.6
       '@codemirror/view': ^6.43.13
       '@types/node': '>=16.0.0'
 
-  '@obsidian-typings/obsidian-public-latest@6.61.0':
-    resolution: {integrity: sha512-KDSvmlLvDqJDf51vHDM8na6ttr2UJhTybotr4E/0falk5W6JQXcKuCgbuUNpHhZMq0tpURX3iQyhgiGFOtf55Q==}
+  '@obsidian-typings/obsidian-public-latest@6.63.0':
+    resolution: {integrity: sha512-MFJbrVgUqlEIcSej6Qnh4ZNvF9LxHIbBb3h3Ty/359SO637spl8zyQQaJm6+bPD07EiVFfograzV82d9P4tRYg==}
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
@@ -1919,15 +1919,15 @@ snapshots:
 
   '@nodable/entities@3.1.0': {}
 
-  '@obsidian-typings/obsidian-public-1.15.1@1.2.0(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)(@types/node@26.6.6)':
+  '@obsidian-typings/obsidian-public-1.15.1@1.4.0(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)(@types/node@26.6.6)':
     dependencies:
       '@codemirror/state': 6.7.6
       '@codemirror/view': 6.43.13
       '@types/node': 26.6.6
 
-  '@obsidian-typings/obsidian-public-latest@6.61.0(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)(@types/node@26.6.6)':
+  '@obsidian-typings/obsidian-public-latest@6.63.0(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)(@types/node@26.6.6)':
     dependencies:
-      '@obsidian-typings/obsidian-public-1.15.1': 1.2.0(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)(@types/node@26.6.6)
+      '@obsidian-typings/obsidian-public-1.15.1': 1.4.0(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)(@types/node@26.6.6)
     transitivePeerDependencies:
       - '@codemirror/state'
       - '@codemirror/view'
