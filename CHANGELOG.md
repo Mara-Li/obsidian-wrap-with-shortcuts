@@ -1,3 +1,5 @@
+## [1.6.1](https://github.com/Mara-Li/obsidian-wrap-with-shortcuts/compare/1.6.0...1.6.1) (2026-11-23)
+
 ## [1.6.0](https://github.com/Mara-Li/obsidian-wrap-with-shortcuts/compare/1.5.0...1.6.0) (2026-11-23)
 ### Features
 

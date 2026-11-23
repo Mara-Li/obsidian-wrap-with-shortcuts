@@ -1,6 +1,6 @@
 {
 	"name": "wrap-with-shortcuts",
-	"version": "1.6.0",
+	"version": "1.6.1",
 	"description": "Wrap selected text in custom tags with shortcuts.",
 	"main": "main.js",
 	"scripts": {
