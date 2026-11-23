@@ -1,5 +1,5 @@
 {
-	"name": "obsidian-wrap-with-shortcuts",
+	"name": "wrap-with-shortcuts",
 	"version": "1.5.0",
 	"description": "Wrap selected text in custom tags with shortcuts.",
 	"main": "main.js",
@@ -18,7 +18,10 @@
 		"t": ""
 	},
 	"keywords": [],
-	"author": "Manic Chuang",
+	"author": [
+		"Manic Chuang",
+		"Mara-Li"
+	],
 	"license": "MIT",
 	"devDependencies": {
 		"@biomejs/biome": "^2.6.8",
