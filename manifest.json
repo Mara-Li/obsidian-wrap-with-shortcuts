@@ -1,6 +1,6 @@
 {
 	"id": "wrap-with-shortcuts",
-	"name": "Wrap with shortcuts",
+	"name": "Wrap shortcuts",
 	"version": "1.6.0",
 	"minAppVersion": "1.14.0",
 	"description": "Wrap selected text in custom tags with shortcuts, e.g. underline, sub, ruby...",
