@@ -8,6 +8,8 @@
 
 Wrap the selected text in customized tags with shortcuts.
 
+Requires Obsidian 1.14.0 or later.
+
 **Underline** is provided with `Ctrl-u`(`Cmd-u`) as default wrappers.
 
 ### Procedure
@@ -16,7 +18,7 @@ Wrap the selected text in customized tags with shortcuts.
 
 ![Create a wrapper](./assets/WrapWithShortcut-AddWrapper.gif)
 
-#### Restart Obsidian, Go Settings -> Hotkeys
+#### Go to Settings → Hotkeys to assign a shortcut
 
 ![Remap a shortcut](./assets/WrapWithShortcut-MapHotkeys.gif)
 

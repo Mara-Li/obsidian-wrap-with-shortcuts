@@ -1,112 +1,95 @@
-import { Command, Editor, EditorPosition, Plugin } from "obsidian";
-import SettingsTab from './SettingsTab'
+import { Plugin } from "obsidian";
+import { DEFAULT_SETTINGS, type WrapperTag, type WrapWithSettings } from "./interface";
+import { WrapWithModal } from "./modal_import";
+import WrapWithSettingsTab from "./SettingsTab";
+import { toggleWrap } from "./wrap";
 
-export interface WrapperTag {
-  id?: string; // 20220904: compitable with older version, mark as optional
-  name: string;
-  startTag: string;
-  endTag: string;
-}
-
-interface WrapperTagSettings {
-  wrapperTags: WrapperTag[];
-}
-
-const DEFAULT_SETTINGS: WrapperTagSettings = {
-  wrapperTags: [
-    {
-      id: 'underline',
-      name: 'Underline',
-      startTag: '<u>',
-      endTag: '</u>'
-    },
-  ]
-}
+/** Id of the original plugin (manic/obsidian-wrap-with-shortcuts) this fork replaces. */
+const LEGACY_PLUGIN_ID = "obsidian-wrap-with-shortcuts";
 
 export default class WrapWithShortcut extends Plugin {
-  settings: WrapperTagSettings;
+	settings!: WrapWithSettings;
+	private wrapSettingTab!: WrapWithSettingsTab;
 
-  async onload() {
-    await this.loadSettings();
-    if (this.settings.wrapperTags.length > 0 && !this.settings.wrapperTags[0].id) {
-      await this.applyWrapperTagID();
-    }
+	async onload(): Promise<void> {
+		await this.loadSettings();
+		this.wrapSettingTab = new WrapWithSettingsTab(this);
+		this.addSettingTab(this.wrapSettingTab);
+		for (const wrapper of this.settings.wrapperTags) this.registerWrapperCommand(wrapper);
+		if (!this.settings.migrated) {
+			this.app.workspace.onLayoutReady(() => this.firstLoad());
+		}
+	}
 
-    this.settings.wrapperTags.forEach((wrapperTag, index) => {
-      this.getCommand(wrapperTag, index)
-    })
-    this.addSettingTab(new SettingsTab(this));
-  }
+	private firstLoad(): void {
+		const olderPlugin = this.app.plugins.getPlugin(LEGACY_PLUGIN_ID);
+		const olderSettings = olderPlugin?.settings as Partial<WrapWithSettings> | undefined;
+		const known = new Set(this.settings.wrapperTags.map((w) => `${w.startTag}\0${w.endTag}`));
+		const toImport = (olderSettings?.wrapperTags ?? []).filter(
+			(w) => !known.has(`${w.startTag}\0${w.endTag}`),
+		);
 
-  getCommand(wrapperTag: WrapperTag, index: number) {
-    const command: Command = {
-      id: `wrap-with-shortcut-${wrapperTag.id}`,
-      name: `Toggle ${wrapperTag.name}`,
-      editorCallback: (editor: Editor) => this.wrapSelectedTextIn(editor, wrapperTag.startTag, wrapperTag.endTag),
-    };
-    this.addCommand(command);
-  }
+		if (toImport.length === 0) {
+			void this.markMigrated();
+			return;
+		}
+		new WrapWithModal(this.app, (accepted) => {
+			if (accepted) this.importWrappers(toImport);
+			void this.markMigrated();
+		}).open();
+	}
 
-  wrapSelectedTextIn(editor: Editor, startTag = '<u>', endTag = '</u>'): void {
-    if (startTag === '' && endTag === '') {
-      return;
-    }
+	private importWrappers(wrappers: WrapperTag[]): void {
+		wrappers.forEach((w, index) => {
+			const wrapper: WrapperTag = { ...w, id: `legacy-${index}` };
+			this.settings.wrapperTags.push(wrapper);
+			this.registerWrapperCommand(wrapper);
+		});
+		// The settings tab caches its definitions; refresh them with the imported wrappers
+		this.wrapSettingTab.update();
+	}
 
-    const selectedText = editor.getSelection();
+	private async markMigrated(): Promise<void> {
+		this.settings.migrated = true;
+		await this.saveSettings();
+	}
 
-    function toPos(editor: Editor, pos: number): EditorPosition {
-      return editor.offsetToPos(pos);
-    }
+	private commandId(wrapper: WrapperTag): string {
+		return `wrap-with-shortcut-${wrapper.id}`;
+	}
 
-    function getRange(editor: Editor, from: number, to: number): string {
-      try {
-        return editor.getRange(toPos(editor, from), toPos(editor, to));
-      } catch (_) {
-        return '';
-      }
-    }
+	registerWrapperCommand(wrapper: WrapperTag): void {
+		this.addCommand({
+			id: this.commandId(wrapper),
+			name: `Toggle ${wrapper.name}`,
+			editorCallback: (editor) => toggleWrap(editor, wrapper.startTag, wrapper.endTag),
+		});
+	}
 
-    /* Detect whether the selected text is packed by <u></u>.
-       If true, unpack it, else pack with <u></u>. */
+	unregisterWrapperCommand(wrapper: WrapperTag): void {
+		this.removeCommand(this.commandId(wrapper));
+	}
 
-    const fos = editor.posToOffset(editor.getCursor("from")); // from offset
-    const tos = editor.posToOffset(editor.getCursor("to")); // to offset
-    const len = selectedText.length;
+	migrateToId(settings: unknown) {
+		const data = Object.assign({}, structuredClone(DEFAULT_SETTINGS), settings);
+		let migrated = false;
+		data.wrapperTags.forEach((wrapper, index) => {
+			if (!wrapper.id) {
+				wrapper.id = `${index}`;
+				migrated = true;
+			}
+		});
+		return { data, migrated };
+	}
 
-    const beforeText = getRange(editor, fos - startTag.length, tos - len);
-    const afterText = getRange(editor, fos + len, tos + endTag.length);
-    const startText = getRange(editor, fos, fos + startTag.length);
-    const endText = getRange(editor, tos - endTag.length, tos);
+	async loadSettings(): Promise<void> {
+		const data = (await this.loadData()) as Partial<WrapWithSettings> | null;
+		const migration = this.migrateToId(data);
+		this.settings = migration.data;
+		if (migration.migrated) await this.saveSettings();
+	}
 
-    if (beforeText === startTag && afterText === endTag) {
-      //=> undo (inside selection)
-      editor.setSelection(toPos(editor, fos - startTag.length), toPos(editor, tos + endTag.length));
-      editor.replaceSelection(selectedText);
-      // re-select
-      editor.setSelection(toPos(editor, fos - startTag.length), toPos(editor, tos - startTag.length));
-    } else if (startText === startTag && endText === endTag) {
-      //=> undo (outside selection)
-      editor.replaceSelection(editor.getRange(toPos(editor, fos + startTag.length), toPos(editor, tos - endTag.length)));
-      // re-select
-      editor.setSelection(toPos(editor, fos), toPos(editor, tos - (startTag.length + endTag.length)));
-    } else {
-      editor.replaceSelection(`${startTag}${selectedText}${endTag}`);
-      editor.setSelection(toPos(editor, fos + startTag.length), toPos(editor, tos + startTag.length));
-    }
-  }
-
-  async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-  }
-
-  async saveSettings() {
-    await this.saveData(this.settings);
-  }
-
-  async applyWrapperTagID() {
-    this.settings.wrapperTags.forEach((wrapperTag, index) => {
-      wrapperTag.id ||= `${index}`;
-    });
-    await this.saveSettings();
-  }
+	async saveSettings(): Promise<void> {
+		await this.saveData(this.settings);
+	}
 }

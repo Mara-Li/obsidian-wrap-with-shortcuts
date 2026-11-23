@@ -19,3 +19,9 @@ main.js
 
 # obsidian
 data.json
+
+# build output
+dist/
+.env
+!src/styles.css
+styles.css
